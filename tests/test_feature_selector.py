@@ -5,6 +5,7 @@ Tests for the feature selection functionality in ThinkML.
 import pytest
 import pandas as pd
 import numpy as np
+import plotly.graph_objects as go
 from thinkml.feature_selection.selector import select_features
 
 @pytest.fixture
@@ -81,6 +82,7 @@ def test_correlation_selection(sample_data):
     assert isinstance(result, dict)
     assert 'selected_features' in result
     assert 'dropped_features' in result
+    assert 'scores' in result
     
     # Check that one of the correlated features was dropped
     corr_features = ['corr1', 'corr2']
@@ -131,6 +133,32 @@ def test_mutual_info_selection(sample_data):
     scores = list(result['scores'].values())
     assert scores == sorted(scores, reverse=True)
 
+def test_rfe_selection(sample_data):
+    """Test feature selection using Recursive Feature Elimination."""
+    X = sample_data.drop(['cat_target', 'cont_target'], axis=1)
+    y = sample_data['cat_target']
+    
+    result = select_features(X, y, method='rfe')
+    
+    # Check result structure
+    assert isinstance(result, dict)
+    assert 'selected_features' in result
+    assert 'dropped_features' in result
+    assert 'scores' in result
+    
+    # Check that scores are calculated
+    assert all(feat in result['scores'] for feat in X.columns)
+    
+    # Check that some features were selected and some were dropped
+    assert len(result['selected_features']) > 0
+    assert len(result['dropped_features']) > 0
+    
+    # Check that all features are either selected or dropped
+    all_features = set(X.columns)
+    selected_features = set(result['selected_features'])
+    dropped_features = set(feat for feat, _ in result['dropped_features'])
+    assert all_features == selected_features.union(dropped_features)
+
 def test_invalid_method(sample_data):
     """Test that invalid method raises ValueError."""
     with pytest.raises(ValueError):
@@ -153,6 +181,9 @@ def test_missing_target(sample_data):
     
     with pytest.raises(ValueError):
         select_features(sample_data, method='mutual_info')
+    
+    with pytest.raises(ValueError):
+        select_features(sample_data, method='rfe')
 
 def test_large_dataset_chunk_processing():
     """Test handling of large datasets with chunk processing."""
@@ -187,4 +218,36 @@ def test_correlation_threshold(sample_data):
     result2 = select_features(sample_data, method='correlation', threshold=0.95)
     
     # More features should be dropped with lower threshold
-    assert len(result1['dropped_features']) >= len(result2['dropped_features']) 
+    assert len(result1['dropped_features']) >= len(result2['dropped_features'])
+
+def test_visualization_parameter(sample_data):
+    """Test that visualization parameter controls plotting."""
+    # Test with visualization=True
+    result1 = select_features(sample_data, method='variance', threshold=0.1, visualize=True)
+    assert 'visualization' in result1
+    assert isinstance(result1['visualization'], go.Figure)
+    
+    # Test with visualization=False
+    result2 = select_features(sample_data, method='variance', threshold=0.1, visualize=False)
+    assert 'visualization' not in result2
+
+def test_visualization_content(sample_data):
+    """Test that visualization contains expected elements."""
+    result = select_features(sample_data, method='variance', threshold=0.1, visualize=True)
+    fig = result['visualization']
+    
+    # Check that figure has the expected layout
+    assert fig.layout.title.text == "Feature Importance Scores"
+    assert fig.layout.xaxis.title.text == "Features"
+    assert fig.layout.yaxis.title.text == "Importance Score"
+    
+    # Check that all features are included in the plot
+    all_features = set(sample_data.columns)
+    plot_features = set(fig.data[0].x)
+    assert all_features == plot_features
+    
+    # Check that colors indicate selected/dropped features
+    colors = fig.data[0].marker.color
+    assert len(colors) == len(sample_data.columns)
+    assert any(color == 'green' for color in colors)  # At least one selected feature
+    assert any(color == 'red' for color in colors)    # At least one dropped feature 
