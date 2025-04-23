@@ -1,119 +1,141 @@
 # ThinkML
 
-ThinkML is a Python library designed to simplify machine learning workflows by providing intelligent data analysis, model suggestions, and preprocessing capabilities.
+ThinkML is a comprehensive machine learning library that helps data scientists and ML engineers streamline their workflow by providing intelligent model suggestions, automated data preprocessing, and insightful exploratory data analysis.
 
 ## Features
 
-### Data Description
-- Comprehensive dataset analysis with `describe_data()`
-- Automatic detection of feature types (numerical, categorical)
-- Statistical summaries for both features and target variables
-- Memory usage analysis and optimization for large datasets
-- Correlation analysis and visualization
-
-### Model Suggestion
-- Intelligent model recommendations based on dataset characteristics
-- Automatic problem type inference (classification/regression)
-- Model complexity analysis with Big-O notation
-- Detailed reasoning for each recommended model
-- Support for large datasets using Dask
-
-### Data Preprocessing
-- Missing value handling with multiple strategies
-- Categorical feature encoding
-- Feature scaling and normalization
-- Imbalanced dataset handling
+- **Intelligent Model Suggestion**: Automatically suggests suitable ML models based on dataset characteristics
+- **Comprehensive Data Description**: Provides detailed dataset analysis and statistics
+- **Automated Preprocessing**: Handles missing values, encoding, scaling, and class imbalance
+- **Outlier Detection**: Multiple methods for detecting and visualizing outliers
+- **Feature Selection**: Various methods for selecting the most relevant features
+- **Interactive Visualizations**: Beautiful and informative plots for data exploration
 
 ## Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/thinkml.git
-cd thinkml
-
-# Install the package
-pip install -e .
+pip install thinkml
 ```
 
-## Usage Examples
-
-### Data Description
+## Quick Start
 
 ```python
 import pandas as pd
-from thinkml.describer.data_describer import describe_data
+from thinkml.describer import describe_data
+from thinkml.analyzer import suggest_model
+from thinkml.preprocessor import handle_missing_values, encode_categorical, scale_features
 
 # Load your dataset
-X = pd.DataFrame({
-    'feature1': [1, 2, 3, 4, 5],
-    'feature2': ['A', 'B', 'A', 'C', 'B']
-})
-y = pd.Series([0, 1, 0, 1, 0])
+X = pd.read_csv('data.csv')
+y = X.pop('target')
 
-# Get a comprehensive description of your dataset
+# Get dataset description
 description = describe_data(X, y)
-print(description)
-```
-
-### Model Suggestion
-
-```python
-import pandas as pd
-from thinkml.analyzer.model_suggester import suggest_model
-
-# Load your dataset
-X = pd.DataFrame({
-    'feature1': [1, 2, 3, 4, 5],
-    'feature2': [10, 20, 30, 40, 50]
-})
-y = pd.Series([0, 1, 0, 1, 0])
 
 # Get model suggestions
 suggestions = suggest_model(X, y)
-print(suggestions)
 
-# Or specify the problem type explicitly
-suggestions = suggest_model(X, y, problem_type='classification')
-print(suggestions)
-```
-
-### Data Preprocessing
-
-```python
-import pandas as pd
-from thinkml.preprocessor.missing_handler import handle_missing_values
-from thinkml.preprocessor.encoder import encode_categorical
-from thinkml.preprocessor.scaler import scale_features
-from thinkml.preprocessor.imbalance_handler import handle_imbalance
-
-# Load your dataset
-X = pd.DataFrame({
-    'feature1': [1, 2, None, 4, 5],
-    'feature2': ['A', 'B', 'A', None, 'B']
-})
-y = pd.Series([0, 1, 0, 1, 0])
-
-# Handle missing values
-X_clean = handle_missing_values(X, strategy='mean')
-
-# Encode categorical features
-X_encoded = encode_categorical(X_clean, method='onehot')
-
-# Scale features
-X_scaled = scale_features(X_encoded, method='standard')
-
-# Handle class imbalance
-X_balanced, y_balanced = handle_imbalance(X_scaled, y, method='smote')
+# Preprocess data
+X = handle_missing_values(X)
+X = encode_categorical(X)
+X = scale_features(X)
 ```
 
 ## Documentation
 
-For detailed documentation, please refer to the [documentation](docs/README.md) directory.
+- [API Documentation](docs/API.md)
+- [User Guide](docs/user_guide.md)
+- [Examples](examples/)
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+We welcome contributions! Here's how you can help:
+
+### Setting Up Development Environment
+
+1. Fork the repository
+2. Clone your fork:
+   ```bash
+   git clone https://github.com/your-username/ThinkML.git
+   cd ThinkML
+   ```
+3. Create a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+4. Install development dependencies:
+   ```bash
+   pip install -r requirements-dev.txt
+   ```
+
+### Development Guidelines
+
+1. **Code Style**
+   - Follow PEP 8 guidelines
+   - Use type hints
+   - Write comprehensive docstrings
+   - Keep functions focused and modular
+
+2. **Testing**
+   - Write unit tests for new features
+   - Ensure all tests pass before submitting PR
+   - Run tests with pytest:
+     ```bash
+     pytest tests/
+     ```
+
+3. **Documentation**
+   - Update API documentation for new features
+   - Include examples in docstrings
+   - Update user guide if necessary
+
+4. **Pull Request Process**
+   - Create a new branch for your feature
+   - Write clear commit messages
+   - Update documentation
+   - Add tests
+   - Submit PR with description of changes
+
+### Project Structure
+
+```
+ThinkML/
+├── docs/
+│   ├── API.md
+│   └── user_guide.md
+├── examples/
+│   └── notebooks/
+├── tests/
+│   ├── test_analyzer/
+│   ├── test_describer/
+│   └── test_preprocessor/
+├── thinkml/
+│   ├── analyzer/
+│   ├── describer/
+│   ├── preprocessor/
+│   ├── outliers/
+│   ├── feature_selection/
+│   └── eda/
+├── LICENSE
+├── README.md
+├── requirements.txt
+└── setup.py
+```
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Citation
+
+If you use ThinkML in your research, please cite:
+
+```bibtex
+@software{thinkml2024,
+  title = {ThinkML: Intelligent Machine Learning Workflow Library},
+  author = {Your Name},
+  year = {2024},
+  url = {https://github.com/yourusername/ThinkML}
+}
+``` 

@@ -1,205 +1,251 @@
 # ThinkML API Documentation
 
 ## Table of Contents
-1. [Data Description](#data-description)
-2. [Model Suggestion](#model-suggestion)
-3. [Data Preprocessing](#data-preprocessing)
+- [Data Description](#data-description)
+- [Model Suggestion](#model-suggestion)
+- [Data Preprocessing](#data-preprocessing)
+- [Outlier Detection](#outlier-detection)
+- [Feature Selection](#feature-selection)
+- [EDA and Visualization](#eda-and-visualization)
 
 ## Data Description
 
-### `describe_data(X, y=None, chunk_size=10000)`
+### describe_data(X, y=None, chunk_size=10000)
 
-Analyzes and describes a dataset, providing comprehensive statistics and insights.
+Analyze and describe datasets, providing various statistics and summaries.
 
-#### Parameters:
-- `X` (pd.DataFrame): Input features
-- `y` (pd.Series, optional): Target variable
-- `chunk_size` (int, optional): Size of chunks for processing large datasets. Defaults to 10000.
+**Parameters:**
+- `X`: pandas DataFrame - Input features
+- `y`: pandas Series, optional - Target variable
+- `chunk_size`: int, default=10000 - Size of chunks for processing large datasets
 
-#### Returns:
-- `dict`: A dictionary containing:
-  - `n_samples`: Number of samples
-  - `n_features`: Number of features
-  - `feature_types`: Dictionary of feature types
-  - `missing_values`: Dictionary of missing value counts
-  - `memory_usage`: Memory usage in bytes
-  - `duplicate_rows`: Number of duplicate rows
-  - `feature_summaries`: Dictionary of feature summaries
-  - `correlation_matrix`: Correlation matrix for numerical features
-  - `target_summary`: Dictionary of target variable statistics (if y is provided)
+**Returns:**
+Dictionary containing:
+- Dataset statistics (samples, features, memory usage)
+- Feature summaries (types, missing values, unique values)
+- Correlation analysis
+- Target variable analysis (if provided)
 
-#### Example:
+**Example:**
 ```python
-import pandas as pd
 from thinkml.describer import describe_data
 
-# Create sample data
-X = pd.DataFrame({
-    'numeric': [1, 2, 3, 4, 5],
-    'categorical': ['A', 'B', 'A', 'C', 'B']
-})
-y = pd.Series([0, 1, 0, 1, 0])
+# Load your dataset
+X = pd.read_csv('data.csv')
+y = X.pop('target')
 
-# Describe the data
+# Get dataset description
 description = describe_data(X, y)
-print(description)
+print(description['feature_summary'])
 ```
 
 ## Model Suggestion
 
-### `suggest_model(X, y, task_type=None)`
+### suggest_model(X, y, task_type=None)
 
-Suggests appropriate machine learning models based on dataset characteristics.
+Suggest appropriate machine learning models based on dataset characteristics.
 
-#### Parameters:
-- `X` (pd.DataFrame): Input features
-- `y` (pd.Series): Target variable
-- `task_type` (str, optional): Type of task ('classification' or 'regression'). If None, inferred from data.
+**Parameters:**
+- `X`: pandas DataFrame - Input features
+- `y`: pandas Series - Target variable
+- `task_type`: str, optional - 'classification' or 'regression'
 
-#### Returns:
-- `dict`: A dictionary containing:
-  - `suggested_models`: List of suggested models with their parameters
-  - `task_type`: Inferred or specified task type
-  - `complexity`: Model complexity assessment
-  - `reasoning`: Explanation for model suggestions
+**Returns:**
+Dictionary containing:
+- Suggested models with confidence scores
+- Model complexity analysis
+- Dataset characteristics
 
-#### Example:
+**Example:**
 ```python
-import pandas as pd
 from thinkml.analyzer import suggest_model
-
-# Create sample data
-X = pd.DataFrame({
-    'feature1': [1, 2, 3, 4, 5],
-    'feature2': [0.1, 0.2, 0.3, 0.4, 0.5]
-})
-y = pd.Series([0, 1, 0, 1, 0])
 
 # Get model suggestions
 suggestions = suggest_model(X, y)
-print(suggestions)
+print(suggestions['recommended_models'])
 ```
 
 ## Data Preprocessing
 
-### Missing Value Handling
+### handle_missing_values(X, strategy='mean')
 
-#### `handle_missing_values(X, strategy='mean', fill_value=None)`
+Handle missing values in the dataset.
 
-Handles missing values in the dataset using various strategies.
+**Parameters:**
+- `X`: pandas DataFrame - Input features
+- `strategy`: str, default='mean' - Strategy for handling missing values
+  - 'mean': Replace with mean
+  - 'median': Replace with median
+  - 'mode': Replace with mode
+  - 'constant': Replace with a constant value
+  - 'drop': Drop rows with missing values
 
-#### Parameters:
-- `X` (pd.DataFrame): Input features
-- `strategy` (str): Strategy for handling missing values ('mean', 'median', 'mode', 'constant', 'drop')
-- `fill_value` (any, optional): Value to use when strategy is 'constant'
-
-#### Returns:
-- `pd.DataFrame`: DataFrame with handled missing values
-
-#### Example:
+**Example:**
 ```python
-import pandas as pd
 from thinkml.preprocessor import handle_missing_values
 
-# Create sample data with missing values
-X = pd.DataFrame({
-    'feature1': [1, None, 3, None, 5],
-    'feature2': [0.1, 0.2, None, 0.4, 0.5]
-})
-
 # Handle missing values
-X_cleaned = handle_missing_values(X, strategy='mean')
-print(X_cleaned)
+X_clean = handle_missing_values(X, strategy='mean')
 ```
 
-### Categorical Encoding
+### encode_categorical(X, method='label')
 
-#### `encode_categorical(X, method='onehot', columns=None)`
+Encode categorical variables.
 
-Encodes categorical features using various encoding methods.
+**Parameters:**
+- `X`: pandas DataFrame - Input features
+- `method`: str, default='label' - Encoding method
+  - 'label': Label encoding
+  - 'onehot': One-hot encoding
+  - 'target': Target encoding
 
-#### Parameters:
-- `X` (pd.DataFrame): Input features
-- `method` (str): Encoding method ('onehot', 'label', 'target', 'frequency')
-- `columns` (list, optional): Columns to encode. If None, all categorical columns are encoded.
-
-#### Returns:
-- `pd.DataFrame`: DataFrame with encoded categorical features
-
-#### Example:
+**Example:**
 ```python
-import pandas as pd
 from thinkml.preprocessor import encode_categorical
-
-# Create sample data with categorical features
-X = pd.DataFrame({
-    'category1': ['A', 'B', 'A', 'C', 'B'],
-    'category2': ['X', 'Y', 'X', 'Z', 'Y']
-})
 
 # Encode categorical features
 X_encoded = encode_categorical(X, method='onehot')
-print(X_encoded)
 ```
 
-### Feature Scaling
+### scale_features(X, method='standard')
 
-#### `scale_features(X, method='standard', columns=None)`
+Scale numerical features.
 
-Scales numerical features using various scaling methods.
+**Parameters:**
+- `X`: pandas DataFrame - Input features
+- `method`: str, default='standard' - Scaling method
+  - 'standard': StandardScaler
+  - 'minmax': MinMaxScaler
+  - 'robust': RobustScaler
 
-#### Parameters:
-- `X` (pd.DataFrame): Input features
-- `method` (str): Scaling method ('standard', 'minmax', 'robust', 'normalizer')
-- `columns` (list, optional): Columns to scale. If None, all numerical columns are scaled.
-
-#### Returns:
-- `pd.DataFrame`: DataFrame with scaled features
-
-#### Example:
+**Example:**
 ```python
-import pandas as pd
 from thinkml.preprocessor import scale_features
-
-# Create sample data with numerical features
-X = pd.DataFrame({
-    'feature1': [1, 2, 3, 4, 5],
-    'feature2': [0.1, 0.2, 0.3, 0.4, 0.5]
-})
 
 # Scale features
 X_scaled = scale_features(X, method='standard')
-print(X_scaled)
 ```
 
-### Imbalance Handling
+### handle_imbalance(X, y, method='smote')
 
-#### `handle_imbalance(X, y, method='smote', sampling_strategy='auto')`
+Handle class imbalance in classification problems.
 
-Handles class imbalance in classification datasets.
+**Parameters:**
+- `X`: pandas DataFrame - Input features
+- `y`: pandas Series - Target variable
+- `method`: str, default='smote' - Resampling method
+  - 'smote': SMOTE oversampling
+  - 'random': Random oversampling
+  - 'tomek': Tomek links undersampling
 
-#### Parameters:
-- `X` (pd.DataFrame): Input features
-- `y` (pd.Series): Target variable
-- `method` (str): Method for handling imbalance ('smote', 'random_oversample', 'random_undersample')
-- `sampling_strategy` (str or dict): Sampling strategy for resampling
-
-#### Returns:
-- `tuple`: (X_resampled, y_resampled) - Resampled features and target
-
-#### Example:
+**Example:**
 ```python
-import pandas as pd
 from thinkml.preprocessor import handle_imbalance
 
-# Create sample imbalanced data
-X = pd.DataFrame({
-    'feature1': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-    'feature2': [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-})
-y = pd.Series([0, 0, 0, 0, 0, 0, 0, 1, 1, 1])
+# Balance dataset
+X_balanced, y_balanced = handle_imbalance(X, y, method='smote')
+```
 
-# Handle class imbalance
-X_resampled, y_resampled = handle_imbalance(X, y, method='smote')
-print(X_resampled.shape, y_resampled.shape)
+## Outlier Detection
+
+### detect_outliers(X, method='zscore', visualize=True)
+
+Detect outliers in the dataset using various methods.
+
+**Parameters:**
+- `X`: pandas DataFrame - Input features
+- `method`: str, default='zscore' - Detection method
+  - 'zscore': Z-score method
+  - 'iqr': IQR method
+  - 'isolation_forest': Isolation Forest
+- `visualize`: bool, default=True - Create interactive visualizations
+
+**Returns:**
+Dictionary containing:
+- Outlier indices
+- Outlier counts per feature
+- Interactive visualization
+
+**Example:**
+```python
+from thinkml.outliers import detect_outliers
+
+# Detect outliers
+outliers = detect_outliers(X, method='zscore')
+print(outliers['outlier_counts'])
+```
+
+## Feature Selection
+
+### select_features(X, y=None, method='variance', threshold=0.1, visualize=True)
+
+Select relevant features using various methods.
+
+**Parameters:**
+- `X`: pandas DataFrame - Input features
+- `y`: pandas Series, optional - Target variable
+- `method`: str, default='variance' - Selection method
+  - 'variance': Variance threshold
+  - 'correlation': Correlation analysis
+  - 'chi2': Chi-squared test
+  - 'mutual_info': Mutual information
+  - 'rfe': Recursive feature elimination
+- `threshold`: float, default=0.1 - Threshold for filtering
+- `visualize`: bool, default=True - Create interactive visualizations
+
+**Returns:**
+Dictionary containing:
+- Selected features
+- Feature importance scores
+- Interactive visualization
+
+**Example:**
+```python
+from thinkml.feature_selection import select_features
+
+# Select features
+selection = select_features(X, y, method='mutual_info')
+print(selection['selected_features'])
+```
+
+## EDA and Visualization
+
+### plot_feature_distributions(X, y=None)
+
+Create interactive visualizations of feature distributions.
+
+**Parameters:**
+- `X`: pandas DataFrame - Input features
+- `y`: pandas Series, optional - Target variable
+
+**Returns:**
+Plotly figure object with feature distributions
+
+**Example:**
+```python
+from thinkml.eda import plot_feature_distributions
+
+# Plot distributions
+fig = plot_feature_distributions(X)
+fig.show()
+```
+
+### plot_correlations(X, method='pearson')
+
+Create interactive correlation heatmap.
+
+**Parameters:**
+- `X`: pandas DataFrame - Input features
+- `method`: str, default='pearson' - Correlation method
+
+**Returns:**
+Plotly figure object with correlation heatmap
+
+**Example:**
+```python
+from thinkml.eda import plot_correlations
+
+# Plot correlations
+fig = plot_correlations(X)
+fig.show()
 ``` 
