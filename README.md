@@ -2,6 +2,8 @@
 
 ThinkML is a comprehensive machine learning library built on top of scikit-learn, providing advanced validation, feature engineering, and model selection capabilities with robust edge case handling.
 
+> **IMPORTANT**: This library is exclusively available from the author's GitHub account. It is not and will not be available on PyPI or any other package repository. The only official source is: https://github.com/ArpanChaudhary/ThinkML
+
 ## Features
 
 ### 1. Advanced Validation Methods
@@ -35,9 +37,9 @@ ThinkML is a comprehensive machine learning library built on top of scikit-learn
 
 ## Installation
 
-ThinkML can only be installed directly from GitHub. Here are the installation methods:
+ThinkML is exclusively available from the author's GitHub repository. It is not available on PyPI or any other package repository. Here are the only official installation methods:
 
-### Method 1: Using pip with GitHub URL
+### Method 1: Using pip with GitHub URL (Recommended)
 ```bash
 pip install git+https://github.com/ArpanChaudhary/ThinkML.git
 ```
@@ -56,13 +58,16 @@ pip install -e .
 
 ### Method 3: Download and Install
 ```bash
-# Download ZIP from GitHub
-# Extract and navigate to directory
+# Download the ZIP file from https://github.com/ArpanChaudhary/ThinkML
+# Extract the ZIP file
+# Navigate to the extracted directory
 cd ThinkML
+
+# Install the package
 pip install -e .
 ```
 
-Note: The `-e` flag installs the package in "editable" mode, which is useful for development.
+> **Note**: Any other installation method or source is not official and may contain unauthorized modifications. Always install from the official GitHub repository: https://github.com/ArpanChaudhary/ThinkML
 
 ## Dependencies
 

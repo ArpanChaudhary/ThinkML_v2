@@ -1,4 +1,13 @@
 from setuptools import setup, find_packages
+import sys
+
+# Warning message to prevent accidental publishing
+if 'sdist' in sys.argv or 'bdist_wheel' in sys.argv:
+    print("\n" + "!"*80)
+    print("WARNING: This package is intended to be installed directly from GitHub only.")
+    print("It should not be published to PyPI or any other package repository.")
+    print("The only official source is: https://github.com/ArpanChaudhary/ThinkML")
+    print("!"*80 + "\n")
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
@@ -6,10 +15,10 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name="thinkml",
     version="1.0.0",
-    description="A comprehensive machine learning library that extends scikit-learn with advanced functionality",
+    description="A comprehensive machine learning library that extends scikit-learn with advanced functionality (GitHub-only distribution)",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="ThinkML Team",
+    author="Arpan Chaudhary",
     author_email="info@thinkml.org",
     url="https://github.com/ArpanChaudhary/ThinkML",
     project_urls={
@@ -55,6 +64,7 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Operating System :: OS Independent",
+        "Private :: Do Not Upload",  # Prevents accidental upload to PyPI
     ],
     entry_points={
         "console_scripts": [
