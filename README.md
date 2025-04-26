@@ -37,14 +37,20 @@ ThinkML is a comprehensive machine learning library built on top of scikit-learn
 
 ## Installation
 
-ThinkML is exclusively available from the author's GitHub repository. It is not available on PyPI or any other package repository. Here are the only official installation methods:
+ThinkML is available on PyPI and can be installed using pip:
 
-### Method 1 (Recommended)
+```bash
+pip install thinkml
+```
+
+### Alternative Installation Methods
+
+#### From GitHub
 ```bash
 pip install git+https://github.com/ArpanChaudhary/ThinkML.git
 ```
 
-### Method 2
+#### From Source
 ```bash
 # Clone the repository
 git clone https://github.com/ArpanChaudhary/ThinkML.git
@@ -56,31 +62,21 @@ cd ThinkML
 pip install -e .
 ```
 
-### Method 3
-```bash
-# Download the ZIP file from https://github.com/ArpanChaudhary/ThinkML
-# Extract the ZIP file
-# Navigate to the extracted directory
-cd ThinkML
-
-# Install the package
-pip install -e .
-```
-
-> **Note**: Any other installation method or source is not official and may contain unauthorized modifications. Always install from the official GitHub repository: https://github.com/ArpanChaudhary/ThinkML
-
 ## Dependencies
 
-Before installing ThinkML, ensure you have the following dependencies:
-- Python 3.6+
-- scikit-learn >= 0.24.0
-- numpy >= 1.19.0
-- pandas >= 1.2.0
+ThinkML requires the following dependencies:
+- Python 3.8+
+- scikit-learn >= 1.0.0
+- numpy >= 1.20.0
+- pandas >= 1.3.0
+- dask >= 2023.1.0
+- matplotlib >= 3.4.0
+- seaborn >= 0.11.0
+- plotly >= 5.0.0
+- xgboost >= 1.5.0
+- lightgbm >= 3.3.0
 
-You can install these dependencies automatically during ThinkML installation, or manually:
-```bash
-pip install scikit-learn>=0.24.0 numpy>=1.19.0 pandas>=1.2.0
-```
+These dependencies will be automatically installed when you install ThinkML.
 
 ## Quick Start
 
