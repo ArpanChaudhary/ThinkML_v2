@@ -35,8 +35,46 @@ ThinkML is a comprehensive machine learning library built on top of scikit-learn
 
 ## Installation
 
+ThinkML can only be installed directly from GitHub. Here are the installation methods:
+
+### Method 1: Using pip with GitHub URL
 ```bash
-pip install thinkml
+pip install git+https://github.com/ArpanChaudhary/ThinkML.git
+```
+
+### Method 2: Clone and Install
+```bash
+# Clone the repository
+git clone https://github.com/ArpanChaudhary/ThinkML.git
+
+# Change to the project directory
+cd ThinkML
+
+# Install the package
+pip install -e .
+```
+
+### Method 3: Download and Install
+```bash
+# Download ZIP from GitHub
+# Extract and navigate to directory
+cd ThinkML
+pip install -e .
+```
+
+Note: The `-e` flag installs the package in "editable" mode, which is useful for development.
+
+## Dependencies
+
+Before installing ThinkML, ensure you have the following dependencies:
+- Python 3.6+
+- scikit-learn >= 0.24.0
+- numpy >= 1.19.0
+- pandas >= 1.2.0
+
+You can install these dependencies automatically during ThinkML installation, or manually:
+```bash
+pip install scikit-learn>=0.24.0 numpy>=1.19.0 pandas>=1.2.0
 ```
 
 ## Quick Start

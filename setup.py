@@ -1,12 +1,23 @@
 from setuptools import setup, find_packages
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
 setup(
     name="thinkml",
-    version="0.1.0",
+    version="1.0.0",
     description="A comprehensive machine learning library that extends scikit-learn with advanced functionality",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     author="ThinkML Team",
     author_email="info@thinkml.org",
-    packages=find_packages(),
+    url="https://github.com/ArpanChaudhary/ThinkML",
+    project_urls={
+        "Bug Tracker": "https://github.com/ArpanChaudhary/ThinkML/issues",
+        "Documentation": "https://github.com/ArpanChaudhary/ThinkML#readme",
+        "Source Code": "https://github.com/ArpanChaudhary/ThinkML",
+    },
+    packages=find_packages(exclude=["tests", "tests.*", "examples", "examples.*"]),
     install_requires=[
         "numpy>=1.20.0",
         "pandas>=1.3.0",
@@ -35,7 +46,7 @@ setup(
     },
     python_requires=">=3.8",
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
@@ -43,6 +54,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
+        "Operating System :: OS Independent",
     ],
     entry_points={
         "console_scripts": [
@@ -58,4 +70,5 @@ setup(
             "thinkml/helpers/notebook_helper.py",
         ]),
     ],
+    zip_safe=False,
 ) 
