@@ -11,370 +11,197 @@ import dask.dataframe as dd
 from typing import Union, Dict, Any, Optional, List, Tuple, Callable
 import dask.array as da
 from .base import BaseModel
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.preprocessing import StandardScaler
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset
 
-class NeuralNetwork(BaseModel):
+class NeuralNetwork(BaseEstimator, ClassifierMixin):
     """
-    Base Neural Network class implemented from scratch.
-    
-    This class provides the foundation for both regression and classification
-    neural networks, with customizable architecture and activation functions.
+    Neural Network implementation using PyTorch.
     """
     
     def __init__(
         self,
-        hidden_layers: List[int] = [10],
+        hidden_layers: List[int] = [100, 50],
         activation: str = 'relu',
-        output_activation: str = 'linear',
-        learning_rate: float = 0.01,
-        n_iterations: int = 1000,
+        learning_rate: float = 0.001,
         batch_size: int = 32,
-        chunk_size: int = 10000,
-        tol: float = 1e-4,
-        verbose: bool = False
+        epochs: int = 100,
+        early_stopping: bool = True,
+        patience: int = 10,
+        random_state: Optional[int] = None
     ):
         """
-        Initialize the Neural Network.
-        
-        Parameters
-        ----------
-        hidden_layers : List[int], default=[10]
-            List of integers representing the number of neurons in each hidden layer
-        activation : str, default='relu'
-            Activation function for hidden layers
-        output_activation : str, default='linear'
-            Activation function for output layer
-        learning_rate : float, default=0.01
-            Learning rate for gradient descent
-        n_iterations : int, default=1000
-            Maximum number of iterations for gradient descent
-        batch_size : int, default=32
-            Size of mini-batches for training
-        chunk_size : int, default=10000
-            Size of chunks for processing large datasets
-        tol : float, default=1e-4
-            Tolerance for stopping criterion
-        verbose : bool, default=False
-            Whether to print progress during training
+        Initialize the neural network.
+
+        Args:
+            hidden_layers: List of neurons in each hidden layer
+            activation: Activation function ('relu', 'tanh', or 'sigmoid')
+            learning_rate: Learning rate for optimization
+            batch_size: Mini-batch size for training
+            epochs: Number of training epochs
+            early_stopping: Whether to use early stopping
+            patience: Number of epochs to wait for improvement before early stopping
+            random_state: Random state for reproducibility
         """
-        super().__init__(chunk_size=chunk_size)
         self.hidden_layers = hidden_layers
         self.activation = activation
-        self.output_activation = output_activation
         self.learning_rate = learning_rate
-        self.n_iterations = n_iterations
         self.batch_size = batch_size
-        self.tol = tol
-        self.verbose = verbose
-        self.weights = []
-        self.biases = []
-        self.loss_history = []
+        self.epochs = epochs
+        self.early_stopping = early_stopping
+        self.patience = patience
+        self.random_state = random_state
         
-        # Set activation functions
-        self._set_activation_functions()
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.scaler = StandardScaler()
+        
+        if random_state is not None:
+            torch.manual_seed(random_state)
+            np.random.seed(random_state)
     
-    def _set_activation_functions(self):
-        """Set the activation functions based on the specified strings."""
-        # Hidden layer activation
-        if self.activation == 'relu':
-            self.activation_fn = self._relu
-            self.activation_derivative = self._relu_derivative
-        elif self.activation == 'sigmoid':
-            self.activation_fn = self._sigmoid
-            self.activation_derivative = self._sigmoid_derivative
-        elif self.activation == 'tanh':
-            self.activation_fn = self._tanh
-            self.activation_derivative = self._tanh_derivative
+    def _build_network(self, input_dim: int, output_dim: int) -> nn.Module:
+        """Build the neural network architecture."""
+        layers = []
+        prev_dim = input_dim
+        
+        # Add hidden layers
+        for neurons in self.hidden_layers:
+            layers.append(nn.Linear(prev_dim, neurons))
+            if self.activation == 'relu':
+                layers.append(nn.ReLU())
+            elif self.activation == 'tanh':
+                layers.append(nn.Tanh())
+            else:  # sigmoid
+                layers.append(nn.Sigmoid())
+            prev_dim = neurons
+        
+        # Add output layer
+        layers.append(nn.Linear(prev_dim, output_dim))
+        if output_dim > 1:
+            layers.append(nn.Softmax(dim=1))
         else:
-            raise ValueError(f"Unsupported activation function: {self.activation}")
+            layers.append(nn.Sigmoid())
         
-        # Output layer activation
-        if self.output_activation == 'linear':
-            self.output_activation_fn = self._linear
-            self.output_activation_derivative = self._linear_derivative
-        elif self.output_activation == 'sigmoid':
-            self.output_activation_fn = self._sigmoid
-            self.output_activation_derivative = self._sigmoid_derivative
-        elif self.output_activation == 'softmax':
-            self.output_activation_fn = self._softmax
-            self.output_activation_derivative = self._softmax_derivative
-        else:
-            raise ValueError(f"Unsupported output activation function: {self.output_activation}")
+        return nn.Sequential(*layers)
     
-    # Activation functions
-    def _relu(self, x: np.ndarray) -> np.ndarray:
-        """ReLU activation function."""
-        return np.maximum(0, x)
-    
-    def _relu_derivative(self, x: np.ndarray) -> np.ndarray:
-        """Derivative of ReLU activation function."""
-        return np.where(x > 0, 1, 0)
-    
-    def _sigmoid(self, x: np.ndarray) -> np.ndarray:
-        """Sigmoid activation function."""
-        return 1 / (1 + np.exp(-x))
-    
-    def _sigmoid_derivative(self, x: np.ndarray) -> np.ndarray:
-        """Derivative of sigmoid activation function."""
-        sigmoid_x = self._sigmoid(x)
-        return sigmoid_x * (1 - sigmoid_x)
-    
-    def _tanh(self, x: np.ndarray) -> np.ndarray:
-        """Tanh activation function."""
-        return np.tanh(x)
-    
-    def _tanh_derivative(self, x: np.ndarray) -> np.ndarray:
-        """Derivative of tanh activation function."""
-        return 1 - np.tanh(x) ** 2
-    
-    def _linear(self, x: np.ndarray) -> np.ndarray:
-        """Linear activation function (identity)."""
-        return x
-    
-    def _linear_derivative(self, x: np.ndarray) -> np.ndarray:
-        """Derivative of linear activation function."""
-        return np.ones_like(x)
-    
-    def _softmax(self, x: np.ndarray) -> np.ndarray:
-        """Softmax activation function."""
-        exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))
-        return exp_x / np.sum(exp_x, axis=1, keepdims=True)
-    
-    def _softmax_derivative(self, x: np.ndarray) -> np.ndarray:
-        """Derivative of softmax activation function."""
-        # This is a simplified version, as the full derivative is more complex
-        # and depends on the specific output being differentiated
-        softmax_x = self._softmax(x)
-        return softmax_x * (1 - softmax_x)
-    
-    def _initialize_parameters(self, n_features: int, n_outputs: int):
+    def fit(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        validation_split: float = 0.2
+    ) -> 'NeuralNetwork':
         """
-        Initialize the network parameters (weights and biases).
-        
-        Parameters
-        ----------
-        n_features : int
-            Number of input features
-        n_outputs : int
-            Number of output neurons
+        Fit the neural network to the training data.
+
+        Args:
+            X: Training features
+            y: Target values
+            validation_split: Fraction of data to use for validation
+
+        Returns:
+            self
         """
-        self.weights = []
-        self.biases = []
+        # Scale features
+        X_scaled = self.scaler.fit_transform(X)
         
-        # Input layer to first hidden layer
-        self.weights.append(np.random.randn(n_features, self.hidden_layers[0]) * 0.01)
-        self.biases.append(np.zeros((1, self.hidden_layers[0])))
+        # Convert to PyTorch tensors
+        X_tensor = torch.FloatTensor(X_scaled)
+        y_tensor = torch.FloatTensor(y.reshape(-1, 1) if len(y.shape) == 1 else y)
         
-        # Hidden layers
-        for i in range(len(self.hidden_layers) - 1):
-            self.weights.append(np.random.randn(self.hidden_layers[i], self.hidden_layers[i+1]) * 0.01)
-            self.biases.append(np.zeros((1, self.hidden_layers[i+1])))
+        # Split into train and validation
+        n_val = int(len(X) * validation_split)
+        indices = np.random.permutation(len(X))
+        train_idx, val_idx = indices[n_val:], indices[:n_val]
         
-        # Last hidden layer to output layer
-        self.weights.append(np.random.randn(self.hidden_layers[-1], n_outputs) * 0.01)
-        self.biases.append(np.zeros((1, n_outputs)))
-    
-    def _forward_propagation(self, X: np.ndarray) -> Tuple[List[np.ndarray], List[np.ndarray]]:
-        """
-        Perform forward propagation through the network.
+        train_dataset = TensorDataset(
+            X_tensor[train_idx], y_tensor[train_idx]
+        )
+        val_dataset = TensorDataset(
+            X_tensor[val_idx], y_tensor[val_idx]
+        )
         
-        Parameters
-        ----------
-        X : np.ndarray
-            Input features
+        train_loader = DataLoader(
+            train_dataset, batch_size=self.batch_size, shuffle=True
+        )
+        val_loader = DataLoader(
+            val_dataset, batch_size=self.batch_size
+        )
+        
+        # Initialize network
+        self.network = self._build_network(
+            X.shape[1],
+            y.shape[1] if len(y.shape) > 1 else 1
+        ).to(self.device)
+        
+        # Initialize optimizer and loss function
+        optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate)
+        criterion = nn.BCELoss()
+        
+        # Training loop
+        best_val_loss = float('inf')
+        patience_counter = 0
+        
+        for epoch in range(self.epochs):
+            # Training
+            self.network.train()
+            train_loss = 0
+            for batch_X, batch_y in train_loader:
+                batch_X = batch_X.to(self.device)
+                batch_y = batch_y.to(self.device)
+                
+                optimizer.zero_grad()
+                outputs = self.network(batch_X)
+                loss = criterion(outputs, batch_y)
+                loss.backward()
+                optimizer.step()
+                
+                train_loss += loss.item()
             
-        Returns
-        -------
-        Tuple[List[np.ndarray], List[np.ndarray]]
-            Activations and weighted sums for each layer
-        """
-        activations = [X]
-        z_values = []
-        
-        # Hidden layers
-        for i in range(len(self.hidden_layers)):
-            z = np.dot(activations[-1], self.weights[i]) + self.biases[i]
-            z_values.append(z)
-            activations.append(self.activation_fn(z))
-        
-        # Output layer
-        z = np.dot(activations[-1], self.weights[-1]) + self.biases[-1]
-        z_values.append(z)
-        activations.append(this.output_activation_fn(z))
-        
-        return activations, z_values
-    
-    def _backward_propagation(self, X: np.ndarray, y: np.ndarray, activations: List[np.ndarray], z_values: List[np.ndarray]) -> Tuple[List[np.ndarray], List[np.ndarray]]:
-        """
-        Perform backward propagation to compute gradients.
-        
-        Parameters
-        ----------
-        X : np.ndarray
-            Input features
-        y : np.ndarray
-            Target values
-        activations : List[np.ndarray]
-            Activations for each layer
-        z_values : List[np.ndarray]
-            Weighted sums for each layer
+            # Validation
+            self.network.eval()
+            val_loss = 0
+            with torch.no_grad():
+                for batch_X, batch_y in val_loader:
+                    batch_X = batch_X.to(self.device)
+                    batch_y = batch_y.to(self.device)
+                    
+                    outputs = self.network(batch_X)
+                    val_loss += criterion(outputs, batch_y).item()
             
-        Returns
-        -------
-        Tuple[List[np.ndarray], List[np.ndarray]]
-            Gradients for weights and biases
-        """
-        m = X.shape[0]
-        n_layers = len(this.weights)
+            # Early stopping
+            if self.early_stopping:
+                if val_loss < best_val_loss:
+                    best_val_loss = val_loss
+                    patience_counter = 0
+                else:
+                    patience_counter += 1
+                    if patience_counter >= self.patience:
+                        break
         
-        # Initialize gradients
-        dW = [np.zeros_like(w) for w in this.weights]
-        db = [np.zeros_like(b) for b in this.biases]
-        
-        # Compute output layer error
-        # This will be overridden by subclasses
-        delta = np.zeros_like(activations[-1])
-        
-        # Backpropagate the error
-        for i in range(n_layers - 1, -1, -1):
-            if i == n_layers - 1:
-                # Output layer
-                dW[i] = np.dot(activations[i].T, delta) / m
-                db[i] = np.sum(delta, axis=0, keepdims=True) / m
-            else:
-                # Hidden layers
-                delta = np.dot(delta, this.weights[i+1].T) * this.activation_derivative(z_values[i])
-                dW[i] = np.dot(activations[i].T, delta) / m
-                db[i] = np.sum(delta, axis=0, keepdims=True) / m
-        
-        return dW, db
-    
-    def _update_parameters(self, dW: List[np.ndarray], db: List[np.ndarray]):
-        """
-        Update network parameters using gradient descent.
-        
-        Parameters
-        ----------
-        dW : List[np.ndarray]
-            Gradients for weights
-        db : List[np.ndarray]
-            Gradients for biases
-        """
-        for i in range(len(this.weights)):
-            this.weights[i] -= this.learning_rate * dW[i]
-            this.biases[i] -= this.learning_rate * db[i]
-    
-    def _compute_loss(self, y_pred: np.ndarray, y_true: np.ndarray) -> float:
-        """
-        Compute the loss function.
-        
-        Parameters
-        ----------
-        y_pred : np.ndarray
-            Predicted values
-        y_true : np.ndarray
-            True values
-            
-        Returns
-        -------
-        float
-            Loss value
-        """
-        # This will be overridden by subclasses
-        return 0.0
-    
-    def _create_mini_batches(self, X: np.ndarray, y: np.ndarray) -> List[Tuple[np.ndarray, np.ndarray]]:
-        """
-        Create mini-batches for training.
-        
-        Parameters
-        ----------
-        X : np.ndarray
-            Input features
-        y : np.ndarray
-            Target values
-            
-        Returns
-        -------
-        List[Tuple[np.ndarray, np.ndarray]]
-            List of mini-batches
-        """
-        m = X.shape[0]
-        mini_batches = []
-        
-        # Shuffle the data
-        permutation = np.random.permutation(m)
-        shuffled_X = X[permutation]
-        shuffled_y = y[permutation]
-        
-        # Create mini-batches
-        num_complete_batches = m // this.batch_size
-        for i in range(num_complete_batches):
-            mini_batch_X = shuffled_X[i * this.batch_size:(i + 1) * this.batch_size]
-            mini_batch_y = shuffled_y[i * this.batch_size:(i + 1) * this.batch_size]
-            mini_batches.append((mini_batch_X, mini_batch_y))
-        
-        # Handle the last mini-batch if it's smaller than batch_size
-        if m % this.batch_size != 0:
-            mini_batch_X = shuffled_X[num_complete_batches * this.batch_size:]
-            mini_batch_y = shuffled_y[num_complete_batches * this.batch_size:]
-            mini_batches.append((mini_batch_X, mini_batch_y))
-        
-        return mini_batches
-    
-    def fit(self, X, y):
-        """
-        Fit the Neural Network to the data.
-        
-        Parameters
-        ----------
-        X : Union[pd.DataFrame, dd.DataFrame, np.ndarray]
-            Training features
-        y : Union[pd.Series, np.ndarray, dd.Series]
-            Target values
-            
-        Returns
-        -------
-        self : object
-            Returns self
-        """
-        # This will be overridden by subclasses
         return self
     
-    def predict(self, X):
-        """
-        Make predictions for X.
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        """Predict class probabilities."""
+        X_scaled = self.scaler.transform(X)
+        X_tensor = torch.FloatTensor(X_scaled).to(self.device)
         
-        Parameters
-        ----------
-        X : Union[pd.DataFrame, dd.DataFrame, np.ndarray]
-            Samples
-            
-        Returns
-        -------
-        Union[np.ndarray, pd.Series, dd.Series]
-            Predicted values
-        """
-        # This will be overridden by subclasses
-        return None
+        self.network.eval()
+        with torch.no_grad():
+            probas = self.network(X_tensor).cpu().numpy()
+        
+        return probas
     
-    def score(self, X, y):
-        """
-        Return the score of the model on the given test data and labels.
-        
-        Parameters
-        ----------
-        X : Union[pd.DataFrame, dd.DataFrame, np.ndarray]
-            Test samples
-        y : Union[pd.Series, np.ndarray, dd.Series]
-            True labels for X
-            
-        Returns
-        -------
-        float
-            Score of the model
-        """
-        # This will be overridden by subclasses
-        return 0.0
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        """Predict class labels."""
+        probas = self.predict_proba(X)
+        if probas.shape[1] > 1:
+            return np.argmax(probas, axis=1)
+        else:
+            return (probas > 0.5).astype(int).reshape(-1)
 
 
 class NeuralNetworkRegressor(NeuralNetwork):
@@ -421,13 +248,12 @@ class NeuralNetworkRegressor(NeuralNetwork):
         super().__init__(
             hidden_layers=hidden_layers,
             activation=activation,
-            output_activation='linear',
             learning_rate=learning_rate,
-            n_iterations=n_iterations,
             batch_size=batch_size,
-            chunk_size=chunk_size,
-            tol=tol,
-            verbose=verbose
+            epochs=n_iterations,
+            early_stopping=False,
+            patience=0,
+            random_state=None
         )
     
     def _compute_loss(self, y_pred: np.ndarray, y_true: np.ndarray) -> float:
@@ -676,13 +502,12 @@ class NeuralNetworkClassifier(NeuralNetwork):
         super().__init__(
             hidden_layers=hidden_layers,
             activation=activation,
-            output_activation='sigmoid' if hidden_layers[-1] == 1 else 'softmax',
             learning_rate=learning_rate,
-            n_iterations=n_iterations,
             batch_size=batch_size,
-            chunk_size=chunk_size,
-            tol=tol,
-            verbose=verbose
+            epochs=n_iterations,
+            early_stopping=False,
+            patience=0,
+            random_state=None
         )
         this.classes = None
     
@@ -752,13 +577,13 @@ class NeuralNetworkClassifier(NeuralNetwork):
         for i in range(n_layers - 1, -1, -1):
             if i == n_layers - 1:
                 # Output layer
-                dW[i] = np.dot(activations[i].T, delta) / m
-                db[i] = np.sum(delta, axis=0, keepdims=True) / m
+                dW[i] = np.dot(activations[i].T, delta)
+                db[i] = np.sum(delta, axis=0, keepdims=True)
             else:
                 # Hidden layers
                 delta = np.dot(delta, this.weights[i+1].T) * this.activation_derivative(z_values[i])
-                dW[i] = np.dot(activations[i].T, delta) / m
-                db[i] = np.sum(delta, axis=0, keepdims=True) / m
+                dW[i] = np.dot(activations[i].T, delta)
+                db[i] = np.sum(delta, axis=0, keepdims=True)
         
         return dW, db
     

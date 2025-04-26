@@ -1,34 +1,38 @@
 """
-Machine learning algorithms module for ThinkML.
+Machine learning algorithms for ThinkML.
 
-This module provides implementations of various machine learning algorithms
-from scratch, without relying on scikit-learn.
+This module provides implementations of common machine learning algorithms
+for classification and regression tasks.
 """
 
-# Regression models
-from .linear_regression import LinearRegression
-from .ridge_regression import RidgeRegression
-from .lasso_regression import LassoRegression
-from .decision_tree import DecisionTreeRegressor
-from .random_forest import RandomForestRegressor
+from .linear import (
+    LogisticRegression,
+    LinearRegression,
+    RidgeRegression
+)
 
-# Classification models
-from .logistic_regression import LogisticRegression
-from .decision_tree import DecisionTreeClassifier
-from .random_forest import RandomForestClassifier
-from .knn import KNeighborsClassifier
+from .tree import (
+    DecisionTreeClassifier,
+    DecisionTreeRegressor,
+    RandomForestClassifier,
+    RandomForestRegressor
+)
+
+from .knn import KNeighborsClassifier, KNeighborsRegressor
+
+from .neural_network import NeuralNetwork
 
 __all__ = [
-    # Regression models
+    'LogisticRegression',
     'LinearRegression',
     'RidgeRegression',
-    'LassoRegression',
-    'DecisionTreeRegressor',
-    'RandomForestRegressor',
-    
-    # Classification models
-    'LogisticRegression',
     'DecisionTreeClassifier',
+    'DecisionTreeRegressor',
     'RandomForestClassifier',
-    'KNeighborsClassifier'
-] 
+    'RandomForestRegressor',
+    'KNeighborsClassifier',
+    'KNeighborsRegressor',
+    'NeuralNetwork'
+]
+
+__version__ = "0.1.0" 

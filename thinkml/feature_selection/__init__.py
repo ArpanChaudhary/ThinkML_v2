@@ -1,11 +1,14 @@
 """
-Feature Selection module for ThinkML.
+Feature selection module for ThinkML.
 
-This module provides functions for selecting the most relevant features from datasets
-using various methods including variance threshold, correlation analysis, chi-squared test,
-and mutual information.
+This module provides functionality for selecting relevant features for model training.
 """
 
-from thinkml.feature_selection.selector import select_features
+from .selector import select_features, get_feature_importance
 
-__all__ = ['select_features'] 
+__all__ = [
+    'select_features',
+    'get_feature_importance'
+]
+
+__version__ = "0.1.0" 

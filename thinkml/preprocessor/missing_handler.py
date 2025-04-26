@@ -12,60 +12,61 @@ from dask.diagnostics import ProgressBar
 
 def handle_missing_values(
     X: pd.DataFrame, 
-    strategy: str = 'mean', 
+    method: str = 'mean', 
     fill_value: Optional[Union[float, str, Dict[str, Union[float, str]]]] = None,
     chunk_size: int = 100000
 ) -> pd.DataFrame:
     """
-    Handle missing values in the dataset using various strategies.
+    Handle missing values in the dataset using various methods.
 
     Args:
         X (pd.DataFrame): Input DataFrame containing features with missing values.
-        strategy (str, optional): Strategy to handle missing values. 
+        method (str, optional): Method to handle missing values. 
             Options: 'mean', 'median', 'mode', 'constant', 'drop'.
             Default is 'mean'.
         fill_value (Optional[Union[float, str, Dict[str, Union[float, str]]]], optional): 
-            Value to use when strategy is 'constant'. Can be a single value or a dictionary
+            Value to use when method is 'constant'. Can be a single value or a dictionary
             mapping column names to fill values. Default is None.
         chunk_size (int, optional): Number of rows to process at a time for memory efficiency.
             Default is 100000.
 
     Returns:
-        pd.DataFrame: DataFrame with missing values handled according to the specified strategy.
+        pd.DataFrame: DataFrame with missing values handled according to the specified method.
 
     Raises:
-        ValueError: If strategy is not one of the supported options.
-        ValueError: If strategy is 'constant' but fill_value is not provided.
+        ValueError: If method is not one of the supported options.
+        ValueError: If method is 'constant' but fill_value is not provided.
+        ValueError: If input DataFrame is empty.
     """
     # Input validation
     if not isinstance(X, pd.DataFrame):
         raise ValueError("Input must be a pandas DataFrame")
     
     if X.empty:
-        return X
+        raise ValueError("Empty dataset provided")
     
-    valid_strategies = ['mean', 'median', 'mode', 'constant', 'drop']
-    if strategy not in valid_strategies:
-        raise ValueError(f"Strategy must be one of {valid_strategies}")
+    valid_methods = ['mean', 'median', 'mode', 'constant', 'drop']
+    if method not in valid_methods:
+        raise ValueError(f"Method must be one of {valid_methods}")
     
-    if strategy == 'constant' and fill_value is None:
-        raise ValueError("fill_value must be provided when strategy is 'constant'")
+    if method == 'constant' and fill_value is None:
+        raise ValueError("fill_value must be provided when method is 'constant'")
     
     # Check if dataset is large enough to use Dask
     if len(X) > 1_000_000:
-        return _handle_missing_values_dask(X, strategy, fill_value)
+        return _handle_missing_values_dask(X, method, fill_value)
     
     # Process in chunks for memory efficiency
     if len(X) > chunk_size:
-        return _handle_missing_values_chunks(X, strategy, fill_value, chunk_size)
+        return _handle_missing_values_chunks(X, method, fill_value, chunk_size)
     
     # For small datasets, process directly
-    return _handle_missing_values_direct(X, strategy, fill_value)
+    return _handle_missing_values_direct(X, method, fill_value)
 
 
 def _handle_missing_values_direct(
     X: pd.DataFrame, 
-    strategy: str, 
+    method: str, 
     fill_value: Optional[Union[float, str, Dict[str, Union[float, str]]]]
 ) -> pd.DataFrame:
     """
@@ -75,10 +76,10 @@ def _handle_missing_values_direct(
     ----------
     X : pd.DataFrame
         Input DataFrame.
-    strategy : str
-        Strategy to use.
+    method : str
+        Method to use.
     fill_value : Optional[Union[float, str, Dict[str, Union[float, str]]]]
-        Value to use for 'constant' strategy.
+        Value to use for 'constant' method.
         
     Returns
     -------
@@ -87,19 +88,19 @@ def _handle_missing_values_direct(
     """
     result = X.copy()
     
-    if strategy == 'drop':
+    if method == 'drop':
         return result.dropna()
     
-    # For other strategies, handle each column appropriately
+    # For other methods, handle each column appropriately
     for col in result.columns:
         if result[col].isna().any():
-            if strategy == 'mean' and pd.api.types.is_numeric_dtype(result[col]):
+            if method == 'mean' and pd.api.types.is_numeric_dtype(result[col]):
                 result[col] = result[col].fillna(result[col].mean())
-            elif strategy == 'median' and pd.api.types.is_numeric_dtype(result[col]):
+            elif method == 'median' and pd.api.types.is_numeric_dtype(result[col]):
                 result[col] = result[col].fillna(result[col].median())
-            elif strategy == 'mode':
+            elif method == 'mode':
                 result[col] = result[col].fillna(result[col].mode().iloc[0])
-            elif strategy == 'constant':
+            elif method == 'constant':
                 if isinstance(fill_value, dict) and col in fill_value:
                     result[col] = result[col].fillna(fill_value[col])
                 else:
@@ -110,7 +111,7 @@ def _handle_missing_values_direct(
 
 def _handle_missing_values_chunks(
     X: pd.DataFrame, 
-    strategy: str, 
+    method: str, 
     fill_value: Optional[Union[float, str, Dict[str, Union[float, str]]]],
     chunk_size: int
 ) -> pd.DataFrame:
@@ -121,10 +122,10 @@ def _handle_missing_values_chunks(
     ----------
     X : pd.DataFrame
         Input DataFrame.
-    strategy : str
-        Strategy to use.
+    method : str
+        Method to use.
     fill_value : Optional[Union[float, str, Dict[str, Union[float, str]]]]
-        Value to use for 'constant' strategy.
+        Value to use for 'constant' method.
     chunk_size : int
         Number of rows to process at a time.
         
@@ -133,19 +134,19 @@ def _handle_missing_values_chunks(
     pd.DataFrame
         DataFrame with missing values handled.
     """
-    # For 'drop' strategy, we need to process the entire dataset at once
-    if strategy == 'drop':
+    # For 'drop' method, we need to process the entire dataset at once
+    if method == 'drop':
         return X.dropna()
     
-    # For other strategies, we can process in chunks
+    # For other methods, we can process in chunks
     result_chunks = []
     
     # Calculate statistics for numeric columns if needed
     stats = {}
-    if strategy in ['mean', 'median']:
+    if method in ['mean', 'median']:
         for col in X.columns:
             if pd.api.types.is_numeric_dtype(X[col]) and X[col].isna().any():
-                if strategy == 'mean':
+                if method == 'mean':
                     stats[col] = X[col].mean()
                 else:  # median
                     stats[col] = X[col].median()
@@ -156,15 +157,15 @@ def _handle_missing_values_chunks(
         
         for col in chunk.columns:
             if chunk[col].isna().any():
-                if strategy == 'mean' and pd.api.types.is_numeric_dtype(chunk[col]):
+                if method == 'mean' and pd.api.types.is_numeric_dtype(chunk[col]):
                     chunk[col] = chunk[col].fillna(stats[col])
-                elif strategy == 'median' and pd.api.types.is_numeric_dtype(chunk[col]):
+                elif method == 'median' and pd.api.types.is_numeric_dtype(chunk[col]):
                     chunk[col] = chunk[col].fillna(stats[col])
-                elif strategy == 'mode':
+                elif method == 'mode':
                     # For mode, we need to calculate it on the entire column
                     mode_value = X[col].mode().iloc[0]
                     chunk[col] = chunk[col].fillna(mode_value)
-                elif strategy == 'constant':
+                elif method == 'constant':
                     if isinstance(fill_value, dict) and col in fill_value:
                         chunk[col] = chunk[col].fillna(fill_value[col])
                     else:
@@ -178,7 +179,7 @@ def _handle_missing_values_chunks(
 
 def _handle_missing_values_dask(
     X: pd.DataFrame, 
-    strategy: str, 
+    method: str, 
     fill_value: Optional[Union[float, str, Dict[str, Union[float, str]]]]
 ) -> pd.DataFrame:
     """
@@ -188,10 +189,10 @@ def _handle_missing_values_dask(
     ----------
     X : pd.DataFrame
         Input DataFrame.
-    strategy : str
-        Strategy to use.
+    method : str
+        Method to use.
     fill_value : Optional[Union[float, str, Dict[str, Union[float, str]]]]
-        Value to use for 'constant' strategy.
+        Value to use for 'constant' method.
         
     Returns
     -------
@@ -201,34 +202,34 @@ def _handle_missing_values_dask(
     # Convert to Dask DataFrame
     ddf = dd.from_pandas(X, npartitions=max(1, len(X) // 100000))
     
-    if strategy == 'drop':
+    if method == 'drop':
         # Drop rows with any missing values
         result_ddf = ddf.dropna()
     else:
-        # For other strategies, handle each column appropriately
+        # For other methods, handle each column appropriately
         result_ddf = ddf.copy()
         
         # Calculate statistics for numeric columns if needed
         stats = {}
-        if strategy in ['mean', 'median']:
+        if method in ['mean', 'median']:
             for col in X.columns:
                 if pd.api.types.is_numeric_dtype(X[col]) and X[col].isna().any():
-                    if strategy == 'mean':
+                    if method == 'mean':
                         stats[col] = X[col].mean()
                     else:  # median
                         stats[col] = X[col].median()
         
-        # Apply the appropriate strategy to each column
+        # Apply the appropriate method to each column
         for col in result_ddf.columns:
-            if strategy == 'mean' and pd.api.types.is_numeric_dtype(X[col]):
+            if method == 'mean' and pd.api.types.is_numeric_dtype(X[col]):
                 result_ddf[col] = result_ddf[col].fillna(stats[col])
-            elif strategy == 'median' and pd.api.types.is_numeric_dtype(X[col]):
+            elif method == 'median' and pd.api.types.is_numeric_dtype(X[col]):
                 result_ddf[col] = result_ddf[col].fillna(stats[col])
-            elif strategy == 'mode':
+            elif method == 'mode':
                 # For mode, we need to calculate it on the entire column
                 mode_value = X[col].mode().iloc[0]
                 result_ddf[col] = result_ddf[col].fillna(mode_value)
-            elif strategy == 'constant':
+            elif method == 'constant':
                 if isinstance(fill_value, dict) and col in fill_value:
                     result_ddf[col] = result_ddf[col].fillna(fill_value[col])
                 else:

@@ -1,135 +1,127 @@
 # ThinkML
 
-ThinkML is a comprehensive machine learning library implemented from scratch, designed to provide a deep understanding of machine learning algorithms without relying on external libraries like scikit-learn.
+ThinkML is a comprehensive machine learning library built on top of scikit-learn, providing advanced validation, feature engineering, and model selection capabilities with robust edge case handling.
 
 ## Features
 
-### Algorithms
+### 1. Advanced Validation Methods
+- Nested Cross-Validation with enhanced error handling
+- Time Series Validation with gap support
+- Stratified Group Validation
+- Bootstrap Validation with stratification
 
-ThinkML implements the following machine learning algorithms from scratch:
+### 2. Feature Engineering
+- Automated feature creation
+- Intelligent feature selection
+- Support for various feature types:
+  - Polynomial features
+  - Interaction features
+  - Domain-specific features
 
-#### Regression Models
-- **Linear Regression**: Basic linear regression with gradient descent optimization
-- **Ridge Regression**: L2-regularized linear regression
-- **Lasso Regression**: L1-regularized linear regression
-- **Decision Tree Regressor**: Regression using decision trees
-- **Random Forest Regressor**: Ensemble of decision trees for regression
+### 3. Robust Preprocessing
+- Advanced scaling with edge case handling
+- Support for:
+  - Empty datasets
+  - Single row datasets
+  - Missing data
+  - Extreme values
+  - Highly correlated features
 
-#### Classification Models
-- **Logistic Regression**: Binary and multi-class classification
-- **Decision Tree Classifier**: Classification using decision trees
-- **Random Forest Classifier**: Ensemble of decision trees for classification
-- **K-Nearest Neighbors**: Classification based on nearest neighbors
+### 4. Performance
+- Efficient handling of large datasets (1M+ rows)
+- Memory-optimized validation methods
+- Parallel processing support
+- Chunked data processing
 
-### Preprocessing
-
-ThinkML includes comprehensive data preprocessing capabilities:
-
-- **Missing Value Handling**: Various strategies for handling missing data
-- **Categorical Feature Encoding**: One-hot encoding, label encoding, and more
-- **Feature Scaling**: Standardization, normalization, and robust scaling
-- **Class Imbalance Handling**: Techniques to address imbalanced datasets
-- **Outlier Detection**: Methods to identify and handle outliers
-
-### Utilities
-
-- **Data Description**: Comprehensive dataset analysis and visualization
-- **Feature Selection**: Methods to select the most important features
-- **Model Selection**: Tools to suggest the best model for a given dataset
-- **Cross-Validation**: K-fold cross-validation for model evaluation
-- **Hyperparameter Tuning**: Grid search and random search for parameter optimization
-
-## Implementation Details
-
-### Base Model
-
-All models in ThinkML inherit from the `BaseModel` class, which provides:
-
-- Data preprocessing capabilities
-- Support for both small and large datasets
-- Chunk-based processing for memory efficiency
-- Dask integration for distributed computing
-
-### Edge Case Handling
-
-All models have been tested for various edge cases:
-
-- Empty datasets
-- Single sample datasets
-- Single feature datasets
-- Perfect separation (for classification)
-- No separation (for classification)
-- Constant features
-- Missing values
-- Extreme values
-- Dask integration
-
-## Getting Started
-
-### Installation
+## Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/thinkml.git
-cd thinkml
-
-# Install dependencies
-pip install -r requirements.txt
+pip install thinkml
 ```
 
-### Basic Usage
+## Quick Start
 
 ```python
-from thinkml.algorithms import LinearRegression
-from thinkml.preprocessing import StandardScaler, MissingHandler
+from thinkml.validation import NestedCrossValidator
+from thinkml.feature_engineering import create_features
+from sklearn.ensemble import RandomForestClassifier
 
-# Load and preprocess data
-X, y = load_data()  # Your data loading function
-X = MissingHandler().fit_transform(X)
-X = StandardScaler().fit_transform(X)
+# Initialize validator
+validator = NestedCrossValidator(
+    estimator=RandomForestClassifier(),
+    param_grid={'n_estimators': [100, 200]},
+    inner_cv=3,
+    outer_cv=5
+)
 
-# Train a model
-model = LinearRegression()
-model.fit(X, y)
+# Create features and validate
+X_new = create_features(X)
+results = validator.fit_predict(X_new, y)
 
-# Make predictions
-y_pred = model.predict(X)
-
-# Evaluate the model
-score = model.score(X, y)
-print(f"R² Score: {score}")
-```
-
-## Testing
-
-ThinkML includes comprehensive test suites for all components:
-
-```bash
-# Run all tests
-pytest
-
-# Run specific test files
-pytest tests/test_models.py
-pytest tests/test_edge_cases.py
+print(f"Mean Score: {results['mean_score']:.3f} ± {results['std_score']:.3f}")
 ```
 
 ## Documentation
 
-Detailed documentation is available in the `docs` directory:
+For detailed documentation, visit our [documentation site](docs/):
+- [Implementation Details](docs/implementation_details.md)
+- [User Guide](docs/user_guide.md)
+- [API Reference](docs/api_reference.md)
 
-- [API Documentation](docs/API.md)
-- [User Guide](docs/UserGuide.md)
-- [Examples](docs/Examples.md)
+## Requirements
+
+- Python 3.6+
+- scikit-learn >= 0.24.0
+- numpy >= 1.19.0
+- pandas >= 1.2.0
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Citation
+
+If you use ThinkML in your research, please cite:
+
+```bibtex
+@software{thinkml2025,
+  title = {ThinkML: Advanced Validation and Feature Engineering for Machine Learning},
+  author = {ThinkML Contributors},
+  year = {2025},
+  version = {1.0},
+  url = {https://github.com/thinkml/thinkml}
+}
+```
 
 ## Acknowledgments
 
-- This library was created for educational purposes to understand machine learning algorithms from first principles.
-- Special thanks to all contributors who have helped improve the library. 
+- Thanks to all contributors who have helped shape ThinkML
+- Inspired by various open-source machine learning libraries
+- Special thanks to the Python data science community
+
+## Contact
+
+Your Name - [@yourtwitter](https://twitter.com/yourtwitter) - email@example.com
+
+Project Link: [https://github.com/yourusername/thinkml](https://github.com/yourusername/thinkml)
+
+## Support
+
+If you encounter any issues or have questions, please:
+
+1. Check the [documentation](https://thinkml.readthedocs.io/)
+2. Search existing [issues](https://github.com/yourusername/thinkml/issues)
+3. Create a new issue if needed
+
+## Roadmap
+
+- [ ] Enhanced deep learning support
+- [ ] Automated hyperparameter tuning
+- [ ] Distributed computing support
+- [ ] Model deployment tools
+- [ ] Web API interface
+- [ ] GUI for interactive model building 

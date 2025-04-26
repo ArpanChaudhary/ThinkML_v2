@@ -10,6 +10,7 @@ import pandas as pd
 import dask.dataframe as dd
 from typing import Dict, Union, List, Any, Optional, Literal
 import dask.array as da
+from collections import Counter
 
 def evaluate_model(
     model: Any,
@@ -223,4 +224,224 @@ def _mean_squared_error(y_true, y_pred):
 
 def _mean_absolute_error(y_true, y_pred):
     """Compute mean absolute error."""
-    return np.mean(np.abs(y_true - y_pred)) 
+    return np.mean(np.abs(y_true - y_pred))
+
+def confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
+    """
+    Compute confusion matrix.
+    
+    Parameters
+    ----------
+    y_true : np.ndarray
+        True labels
+    y_pred : np.ndarray
+        Predicted labels
+        
+    Returns
+    -------
+    np.ndarray
+        2x2 confusion matrix
+    """
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
+    
+    # Get unique classes
+    classes = np.unique(np.concatenate([y_true, y_pred]))
+    n_classes = len(classes)
+    
+    # Initialize confusion matrix
+    cm = np.zeros((n_classes, n_classes), dtype=int)
+    
+    # Fill confusion matrix
+    for i in range(n_classes):
+        for j in range(n_classes):
+            cm[i, j] = np.sum((y_true == classes[i]) & (y_pred == classes[j]))
+            
+    return cm
+
+def roc_auc_score(y_true: np.ndarray, y_score: np.ndarray) -> float:
+    """
+    Compute ROC-AUC score.
+    
+    Parameters
+    ----------
+    y_true : np.ndarray
+        True labels
+    y_score : np.ndarray
+        Target scores/probabilities
+        
+    Returns
+    -------
+    float
+        ROC-AUC score
+    """
+    y_true = np.asarray(y_true)
+    y_score = np.asarray(y_score)
+    
+    # Sort scores and corresponding true labels
+    sorted_indices = np.argsort(y_score)[::-1]
+    y_true_sorted = y_true[sorted_indices]
+    
+    # Calculate true positive and false positive rates
+    tp = np.cumsum(y_true_sorted == 1)
+    fp = np.cumsum(y_true_sorted == 0)
+    
+    # Calculate total positives and negatives
+    n_pos = np.sum(y_true == 1)
+    n_neg = np.sum(y_true == 0)
+    
+    # Calculate TPR and FPR
+    tpr = tp / n_pos if n_pos > 0 else np.zeros_like(tp)
+    fpr = fp / n_neg if n_neg > 0 else np.zeros_like(fp)
+    
+    # Calculate AUC using trapezoidal rule
+    auc = np.trapz(tpr, fpr)
+    
+    return auc
+
+def mean_squared_error(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """
+    Compute mean squared error.
+    
+    Parameters
+    ----------
+    y_true : np.ndarray
+        True values
+    y_pred : np.ndarray
+        Predicted values
+        
+    Returns
+    -------
+    float
+        Mean squared error
+    """
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
+    
+    return np.mean((y_true - y_pred) ** 2)
+
+def root_mean_squared_error(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """
+    Compute root mean squared error.
+    
+    Parameters
+    ----------
+    y_true : np.ndarray
+        True values
+    y_pred : np.ndarray
+        Predicted values
+        
+    Returns
+    -------
+    float
+        Root mean squared error
+    """
+    return np.sqrt(mean_squared_error(y_true, y_pred))
+
+def mean_absolute_error(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """
+    Compute mean absolute error.
+    
+    Parameters
+    ----------
+    y_true : np.ndarray
+        True values
+    y_pred : np.ndarray
+        Predicted values
+        
+    Returns
+    -------
+    float
+        Mean absolute error
+    """
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
+    
+    return np.mean(np.abs(y_true - y_pred))
+
+def r2_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """
+    Compute R² score.
+    
+    Parameters
+    ----------
+    y_true : np.ndarray
+        True values
+    y_pred : np.ndarray
+        Predicted values
+        
+    Returns
+    -------
+    float
+        R² score
+    """
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
+    
+    # Calculate total sum of squares
+    ss_tot = np.sum((y_true - np.mean(y_true)) ** 2)
+    
+    # Calculate residual sum of squares
+    ss_res = np.sum((y_true - y_pred) ** 2)
+    
+    # Calculate R²
+    r2 = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0.0
+    
+    return r2
+
+def evaluate_regression(
+    y_true: np.ndarray,
+    y_pred: np.ndarray
+) -> Dict[str, float]:
+    """
+    Evaluate regression model performance.
+    
+    Parameters
+    ----------
+    y_true : np.ndarray
+        True values
+    y_pred : np.ndarray
+        Predicted values
+        
+    Returns
+    -------
+    Dict[str, float]
+        Dictionary containing regression metrics
+    """
+    return {
+        'mse': mean_squared_error(y_true, y_pred),
+        'rmse': root_mean_squared_error(y_true, y_pred),
+        'mae': mean_absolute_error(y_true, y_pred),
+        'r2': r2_score(y_true, y_pred)
+    }
+
+def evaluate_classification(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    y_score: Optional[np.ndarray] = None
+) -> Dict[str, Union[float, np.ndarray]]:
+    """
+    Evaluate classification model performance.
+    
+    Parameters
+    ----------
+    y_true : np.ndarray
+        True labels
+    y_pred : np.ndarray
+        Predicted labels
+    y_score : Optional[np.ndarray], optional
+        Target scores/probabilities for ROC-AUC
+        
+    Returns
+    -------
+    Dict[str, Union[float, np.ndarray]]
+        Dictionary containing classification metrics
+    """
+    metrics = {
+        'confusion_matrix': confusion_matrix(y_true, y_pred)
+    }
+    
+    if y_score is not None:
+        metrics['roc_auc'] = roc_auc_score(y_true, y_score)
+        
+    return metrics 

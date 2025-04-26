@@ -9,15 +9,30 @@ import numpy as np
 import pandas as pd
 import dask.dataframe as dd
 from typing import Dict, Union, List, Tuple, Any, Optional
-from sklearn.linear_model import LogisticRegression, LinearRegression, Ridge
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score, f1_score, mean_squared_error, r2_score
 import dask_ml.linear_model as dask_linear
 import dask_ml.ensemble as dask_ensemble
 import dask_ml.neighbors as dask_neighbors
 import dask_ml.metrics as dask_metrics
+
+# Import our own model implementations
+from thinkml.algorithms import (
+    LogisticRegression,
+    LinearRegression,
+    RidgeRegression,
+    DecisionTreeClassifier,
+    DecisionTreeRegressor,
+    RandomForestClassifier,
+    RandomForestRegressor,
+    KNeighborsClassifier
+)
+
+# Import our own metrics implementations
+from thinkml.evaluation.metrics import (
+    accuracy_score,
+    f1_score,
+    mean_squared_error,
+    r2_score
+)
 
 def train_multiple_models(
     X_train: Union[pd.DataFrame, dd.DataFrame],
@@ -86,7 +101,7 @@ def train_multiple_models(
         else:
             models = {
                 'Linear Regression': LinearRegression(),
-                'Ridge Regression': Ridge(),
+                'Ridge Regression': RidgeRegression(),
                 'Decision Tree': DecisionTreeRegressor(),
                 'Random Forest': RandomForestRegressor()
             }
@@ -98,43 +113,31 @@ def train_multiple_models(
     for name, model in models.items():
         # Train the model
         model.fit(X_train, y_train)
-        trained_models[name] = model
         
         # Make predictions
         y_pred = model.predict(X_test)
         
-        # Evaluate based on problem type
+        # Evaluate performance
         if problem_type == 'classification':
-            # For classification, use accuracy and F1-score
-            if use_dask_models:
-                accuracy = dask_metrics.accuracy_score(y_test, y_pred)
-                f1 = dask_metrics.f1_score(y_test, y_pred, average='weighted')
-            else:
-                accuracy = accuracy_score(y_test, y_pred)
-                f1 = f1_score(y_test, y_pred, average='weighted')
-            
-            evaluation_scores[name] = {
-                'accuracy': accuracy,
-                'f1_score': f1
+            scores = {
+                'accuracy': accuracy_score(y_test, y_pred),
+                'f1': f1_score(y_test, y_pred)
             }
-        else:
-            # For regression, use RMSE and R²
-            if use_dask_models:
-                rmse = np.sqrt(dask_metrics.mean_squared_error(y_test, y_pred))
-                r2 = dask_metrics.r2_score(y_test, y_pred)
-            else:
-                rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-                r2 = r2_score(y_test, y_pred)
-            
-            evaluation_scores[name] = {
-                'rmse': rmse,
-                'r2_score': r2
+        else:  # regression
+            scores = {
+                'mse': mean_squared_error(y_test, y_pred),
+                'r2': r2_score(y_test, y_pred)
             }
+        
+        # Store results
+        trained_models[name] = model
+        evaluation_scores[name] = scores
     
     # Display evaluation report
     _display_evaluation_report(evaluation_scores, problem_type)
     
     return trained_models, evaluation_scores
+
 
 def predict_with_model(
     model: Any,
@@ -148,24 +151,27 @@ def predict_with_model(
     model : Any
         Trained model object
     X_new : Union[pd.DataFrame, dd.DataFrame]
-        New feature data for prediction
+        New data to make predictions for
         
     Returns
     -------
     Union[np.ndarray, pd.Series, dd.Series]
-        Predictions
+        Predictions for the new data
     """
-    # Make predictions
-    predictions = model.predict(X_new)
+    # Input validation
+    if not hasattr(model, 'predict'):
+        raise ValueError("Model must have a 'predict' method")
     
-    return predictions
+    # Make predictions
+    return model.predict(X_new)
+
 
 def _display_evaluation_report(
     evaluation_scores: Dict[str, Dict[str, float]],
     problem_type: str
 ) -> None:
     """
-    Display a formatted evaluation report.
+    Display a summary of model evaluation scores.
     
     Parameters
     ----------
@@ -174,20 +180,17 @@ def _display_evaluation_report(
     problem_type : str
         Type of problem: 'classification' or 'regression'
     """
-    print("\nModel Evaluation Report:")
-    print("=" * 50)
+    print("\n===== MODEL EVALUATION REPORT =====")
     
     if problem_type == 'classification':
-        print(f"{'Model':<20} {'Accuracy':<15} {'F1-Score':<15}")
-        print("-" * 50)
-        
+        print(f"{'Model':<20} {'Accuracy':<10} {'F1 Score':<10}")
+        print("-" * 40)
         for model_name, scores in evaluation_scores.items():
-            print(f"{model_name:<20} {scores['accuracy']:<15.4f} {scores['f1_score']:<15.4f}")
-    else:
-        print(f"{'Model':<20} {'RMSE':<15} {'R²':<15}")
-        print("-" * 50)
-        
+            print(f"{model_name:<20} {scores['accuracy']:<10.4f} {scores['f1']:<10.4f}")
+    else:  # regression
+        print(f"{'Model':<20} {'MSE':<10} {'R²':<10}")
+        print("-" * 40)
         for model_name, scores in evaluation_scores.items():
-            print(f"{model_name:<20} {scores['rmse']:<15.4f} {scores['r2_score']:<15.4f}")
+            print(f"{model_name:<20} {scores['mse']:<10.4f} {scores['r2']:<10.4f}")
     
-    print("=" * 50) 
+    print("=====================================\n") 
