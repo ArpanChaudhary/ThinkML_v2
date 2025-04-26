@@ -39,12 +39,12 @@ ThinkML is a comprehensive machine learning library built on top of scikit-learn
 
 ThinkML is exclusively available from the author's GitHub repository. It is not available on PyPI or any other package repository. Here are the only official installation methods:
 
-### Method 1: Using pip with GitHub URL (Recommended)
+### Method 1 (Recommended)
 ```bash
 pip install git+https://github.com/ArpanChaudhary/ThinkML.git
 ```
 
-### Method 2: Clone and Install
+### Method 2
 ```bash
 # Clone the repository
 git clone https://github.com/ArpanChaudhary/ThinkML.git
@@ -56,7 +56,7 @@ cd ThinkML
 pip install -e .
 ```
 
-### Method 3: Download and Install
+### Method 3
 ```bash
 # Download the ZIP file from https://github.com/ArpanChaudhary/ThinkML
 # Extract the ZIP file
@@ -133,10 +133,10 @@ If you use ThinkML in your research, please cite:
 ```bibtex
 @software{thinkml2025,
   title = {ThinkML: Advanced Validation and Feature Engineering for Machine Learning},
-  author = {ThinkML Contributors},
+  author = {Chaudhary, Arpan},
   year = {2025},
   version = {1.0},
-  url = {https://github.com/thinkml/thinkml}
+  url = {https://github.com/ArpanChaudhary/ThinkML}
 }
 ```
 
@@ -148,16 +148,16 @@ If you use ThinkML in your research, please cite:
 
 ## Contact
 
-Your Name - [@yourtwitter](https://twitter.com/yourtwitter) - email@example.com
+Arpan Chaudhary - [@ArpanChaudhary](https://github.com/ArpanChaudhary)
 
-Project Link: [https://github.com/yourusername/thinkml](https://github.com/yourusername/thinkml)
+Project Link: [https://github.com/ArpanChaudhary/ThinkML](https://github.com/ArpanChaudhary/ThinkML)
 
 ## Support
 
 If you encounter any issues or have questions, please:
 
-1. Check the [documentation](https://thinkml.readthedocs.io/)
-2. Search existing [issues](https://github.com/yourusername/thinkml/issues)
+1. Check the [documentation](https://github.com/ArpanChaudhary/ThinkML#readme)
+2. Search existing [issues](https://github.com/ArpanChaudhary/ThinkML/issues)
 3. Create a new issue if needed
 
 ## Roadmap
