@@ -1,126 +1,56 @@
 # ThinkML
 
-ThinkML is a comprehensive machine learning library built on top of scikit-learn, providing advanced validation, feature engineering, and model selection capabilities with robust edge case handling.
-
-> **IMPORTANT**: This library is exclusively available from the author's GitHub account. It is not and will not be available on PyPI or any other package repository. The only official source is: https://github.com/ArpanChaudhary/ThinkML
+ThinkML is a powerful Python library that converts natural language prompts into executable machine learning code. It provides an intuitive interface for performing common ML tasks through simple text commands.
 
 ## Features
 
-### 1. Advanced Validation Methods
-- Nested Cross-Validation with enhanced error handling
-- Time Series Validation with gap support
-- Stratified Group Validation
-- Bootstrap Validation with stratification
-
-### 2. Feature Engineering
-- Automated feature creation
-- Intelligent feature selection
-- Support for various feature types:
-  - Polynomial features
-  - Interaction features
-  - Domain-specific features
-
-### 3. Robust Preprocessing
-- Advanced scaling with edge case handling
-- Support for:
-  - Empty datasets
-  - Single row datasets
-  - Missing data
-  - Extreme values
-  - Highly correlated features
-
-### 4. Performance
-- Efficient handling of large datasets (1M+ rows)
-- Memory-optimized validation methods
-- Parallel processing support
-- Chunked data processing
+- Natural language processing of ML tasks
+- Automatic code generation for common ML workflows
+- Support for various ML models and algorithms
+- Built-in visualization capabilities
+- Comprehensive model evaluation metrics
+- Dataset description and analysis tools
 
 ## Installation
-
-ThinkML is available on PyPI and can be installed using pip:
 
 ```bash
 pip install thinkml
 ```
 
-### Alternative Installation Methods
-
-#### From GitHub
-```bash
-pip install git+https://github.com/ArpanChaudhary/ThinkML.git
-```
-
-#### From Source
-```bash
-# Clone the repository
-git clone https://github.com/ArpanChaudhary/ThinkML.git
-
-# Change to the project directory
-cd ThinkML
-
-# Install the package
-pip install -e .
-```
-
-## Dependencies
-
-ThinkML requires the following dependencies:
-- Python 3.8+
-- scikit-learn >= 1.0.0
-- numpy >= 1.20.0
-- pandas >= 1.3.0
-- dask >= 2023.1.0
-- matplotlib >= 3.4.0
-- seaborn >= 0.11.0
-- plotly >= 5.0.0
-- xgboost >= 1.5.0
-- lightgbm >= 3.3.0
-
-These dependencies will be automatically installed when you install ThinkML.
-
 ## Quick Start
 
 ```python
-from thinkml.validation import NestedCrossValidator
-from thinkml.feature_engineering import create_features
-from sklearn.ensemble import RandomForestClassifier
+from thinkml import ThinkMLEngine
+import pandas as pd
 
-# Initialize validator
-validator = NestedCrossValidator(
-    estimator=RandomForestClassifier(),
-    param_grid={'n_estimators': [100, 200]},
-    inner_cv=3,
-    outer_cv=5
-)
+# Initialize the engine
+engine = ThinkMLEngine()
 
-# Create features and validate
-X_new = create_features(X)
-results = validator.fit_predict(X_new, y)
+# Load your data
+data = pd.read_csv('your_data.csv')
+engine.set_data(data)
 
-print(f"Mean Score: {results['mean_score']:.3f} ± {results['std_score']:.3f}")
+# Process natural language prompts
+result = engine.process("Describe the dataset")
+result = engine.process("Train a decision tree model")
+result = engine.process("Plot feature importance")
 ```
 
-## Documentation
+## Supported Tasks
 
-For detailed documentation, visit our [documentation site](docs/):
-- [Implementation Details](docs/implementation_details.md)
-- [User Guide](docs/user_guide.md)
-- [API Reference](docs/api_reference.md)
-
-## Requirements
-
-- Python 3.6+
-- scikit-learn >= 0.24.0
-- numpy >= 1.19.0
-- pandas >= 1.2.0
+- Dataset description and analysis
+- Data preprocessing and cleaning
+- Model training (various algorithms)
+- Model evaluation
+- Visualization (ROC curves, feature importance, etc.)
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Citation
 

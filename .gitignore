@@ -40,8 +40,8 @@ htmlcov/
 .pytest_cache/
 
 # Distribution
-*.tar.gz
-*.zip
+dist/
+build/
 
 # Logs
 *.log
