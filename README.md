@@ -59,10 +59,10 @@ If you use ThinkML in your research, please cite:
 ```bibtex
 @software{thinkml2025,
   title = {ThinkML: Advanced Validation and Feature Engineering for Machine Learning},
-  author = {Chaudhary, Arpan},
+  author = {Vvg},
   year = {2025},
   version = {1.0},
-  url = {https://github.com/ArpanChaudhary/ThinkML}
+  url = {https://github.com/vvg-123/ThinkML}
 }
 ```
 
@@ -74,16 +74,16 @@ If you use ThinkML in your research, please cite:
 
 ## Contact
 
-Arpan Chaudhary - [@ArpanChaudhary](https://github.com/ArpanChaudhary)
+Vvg - [@vvg-123](https://github.com/vvg-123)
 
-Project Link: [https://github.com/ArpanChaudhary/ThinkML](https://github.com/ArpanChaudhary/ThinkML)
+Project Link: [https://github.com/vvg-123/ThinkML](https://github.com/vvg-123/ThinkML)
 
 ## Support
 
 If you encounter any issues or have questions, please:
 
-1. Check the [documentation](https://github.com/ArpanChaudhary/ThinkML#readme)
-2. Search existing [issues](https://github.com/ArpanChaudhary/ThinkML/issues)
+1. Check the [documentation](https://github.com/vvg-123/ThinkML#readme)
+2. Search existing [issues](https://github.com/vvg-123/ThinkML/issues)
 3. Create a new issue if needed
 
 ## Roadmap
