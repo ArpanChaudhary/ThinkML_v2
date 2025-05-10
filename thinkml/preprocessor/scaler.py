@@ -305,4 +305,68 @@ def detect_outliers(data: Union[pd.DataFrame, dd.DataFrame], columns: Optional[L
         'outlier_indices': outlier_indices,
         'outlier_scores': outlier_scores,
         'summary': summary
-    } 
+    }
+
+def handle_extreme_values(data: Union[pd.DataFrame, dd.DataFrame], columns: Optional[List[str]] = None, method: str = 'clip', threshold: float = 3.0, **kwargs) -> Union[pd.DataFrame, dd.DataFrame]:
+    """
+    Detect and handle extreme values (outliers) in the dataset.
+
+    Args:
+        data: Input DataFrame (pandas or dask)
+        columns: List of columns to process (default: all numeric columns)
+        method: How to handle outliers ('clip', 'mean', 'median', 'drop')
+        threshold: Z-score or IQR threshold for outlier detection
+        **kwargs: Additional arguments for outlier detection/handling
+
+    Returns:
+        DataFrame with extreme values handled
+    """
+    if not isinstance(data, (pd.DataFrame, dd.DataFrame)):
+        raise TypeError("Input must be a pandas or dask DataFrame")
+
+    # If no columns specified, use all numeric columns
+    if columns is None:
+        if isinstance(data, dd.DataFrame):
+            columns = [col for col, dtype in data.dtypes.items() if np.issubdtype(dtype, np.number)]
+        else:
+            columns = data.select_dtypes(include=['int64', 'float64']).columns.tolist()
+
+    # Detect outliers using z-score
+    result = data.copy()
+    for col in columns:
+        if isinstance(data, dd.DataFrame):
+            # For Dask, compute z-scores in partitions
+            mean = data[col].mean().compute()
+            std = data[col].std().compute()
+            z_scores = data[col].map_partitions(lambda x: (x - mean) / std)
+            outliers = z_scores.abs() > threshold
+            if method == 'clip':
+                lower = mean - threshold * std
+                upper = mean + threshold * std
+                result[col] = result[col].map_partitions(lambda x: x.clip(lower, upper))
+            elif method == 'mean':
+                mean_val = mean
+                result[col] = result[col].map_partitions(lambda x: x.where(~outliers, mean_val))
+            elif method == 'median':
+                median_val = data[col].median().compute()
+                result[col] = result[col].map_partitions(lambda x: x.where(~outliers, median_val))
+            elif method == 'drop':
+                result = result[~outliers]
+        else:
+            z_scores = stats.zscore(data[col])
+            outliers = np.abs(z_scores) > threshold
+            if method == 'clip':
+                mean = data[col].mean()
+                std = data[col].std()
+                lower = mean - threshold * std
+                upper = mean + threshold * std
+                result[col] = result[col].clip(lower, upper)
+            elif method == 'mean':
+                mean_val = data[col].mean()
+                result.loc[outliers, col] = mean_val
+            elif method == 'median':
+                median_val = data[col].median()
+                result.loc[outliers, col] = median_val
+            elif method == 'drop':
+                result = result.loc[~outliers]
+    return result 

@@ -31,7 +31,8 @@ class PromptRefiner:
             ],
             'evaluate': [
                 'evaluate', 'assess', 'test', 'validate', 'check',
-                'measure', 'score', 'verify', 'examine'
+                'measure', 'score', 'verify', 'examine',
+                'accuracy', 'precision', 'recall', 'f1-score', 'f1 score', 'performance'
             ],
             'visualize': [
                 'visualize', 'plot', 'graph', 'chart', 'show',
@@ -132,25 +133,38 @@ class PromptRefiner:
         
         # Convert to lowercase for case-insensitive matching
         prompt_lower = prompt.lower()
-        
-        # Identify task
+
+        # Identify explicit visualization keywords (strong indicators)
+        explicit_viz_keywords = [
+            'plot', 'roc', 'feature importance', 'correlation heatmap', 'confusion matrix',
+            'roc curve', 'roc plot', 'importance plot', 'correlation plot', 'confusion plot',
+            'draw', 'graph', 'chart', 'illustrate', 'present'
+        ]
+        # Only consider explicit viz if the prompt starts with or is dominated by these keywords
+        is_explicit_viz = any(prompt_lower.strip().startswith(kw) or f' {kw} ' in prompt_lower for kw in explicit_viz_keywords)
+
+        # Identify task (preprocess takes precedence over visualize unless explicit viz)
+        found_preprocess = False
         for task, patterns in self.task_patterns.items():
             if any(pattern.search(prompt_lower) for pattern in patterns):
+                if task == 'preprocess':
+                    found_preprocess = True
                 result['task'] = task
                 break
-        
+
         # Identify model
         for model, patterns in self.model_patterns.items():
             if any(pattern.search(prompt_lower) for pattern in patterns):
                 result['model'] = model
                 break
-        
+
         # Identify visualization type
         for viz_type, patterns in self.visualization_patterns.items():
             if any(pattern.search(prompt_lower) for pattern in patterns):
                 result['visualization'] = viz_type
-                # If visualization is found, ensure task is set to 'visualize'
-                result['task'] = 'visualize'
+                # Only set task to 'visualize' if not preprocess or if explicit viz
+                if not found_preprocess or is_explicit_viz:
+                    result['task'] = 'visualize'
                 break
         
         logger.info(f"Refined prompt components: {result}")

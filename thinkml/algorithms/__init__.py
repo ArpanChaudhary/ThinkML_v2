@@ -22,6 +22,8 @@ from .knn import KNeighborsClassifier, KNeighborsRegressor
 
 from .neural_network import NeuralNetwork
 
+from thinkml.algorithms.lasso_regression import LassoRegression
+
 __all__ = [
     'LogisticRegression',
     'LinearRegression',
@@ -32,7 +34,8 @@ __all__ = [
     'RandomForestRegressor',
     'KNeighborsClassifier',
     'KNeighborsRegressor',
-    'NeuralNetwork'
+    'NeuralNetwork',
+    'LassoRegression',
 ]
 
 __version__ = "0.1.0" 

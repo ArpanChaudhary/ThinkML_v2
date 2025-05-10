@@ -52,7 +52,7 @@ class ThinkMLEngine:
         try:
             # Validate prompt
             if not prompt or not isinstance(prompt, str):
-                raise ValueError("Invalid prompt: prompt must be a non-empty string")
+                raise ExecutionError("Invalid prompt: prompt must be a non-empty string")
             
             # Refine the prompt
             refined = self.refiner.refine(prompt)
@@ -60,7 +60,14 @@ class ThinkMLEngine:
             # If no task is identified, get suggestions
             if not refined['task']:
                 suggestions = self.refiner.get_suggestions(prompt)
-                raise ValueError("\n".join(suggestions))
+                raise ExecutionError("Prompt could not be mapped to a valid task.\n" + "\n".join(suggestions))
+            
+            # If the prompt is about data, wrap set_data in try/except
+            if refined['task'] in ['describe', 'preprocess', 'train', 'evaluate', 'visualize']:
+                try:
+                    self.executor.set_data(self.data)
+                except Exception as e:
+                    raise ExecutionError(str(e))
             
             # Parse the refined prompt
             command = self.interpreter.parse(refined)
@@ -285,6 +292,26 @@ class ExecutionManager:
     
     def set_data(self, data: pd.DataFrame):
         """Set the data and prepare train/test splits."""
+        # Robust data validation
+        if data is None or not isinstance(data, pd.DataFrame):
+            raise ExecutionError("Input data must be a pandas DataFrame.")
+        if data.empty:
+            raise ExecutionError("DataFrame is empty.")
+        if data.shape[1] < 2:
+            raise ExecutionError("DataFrame must have at least two columns (features and target).")
+        if data.shape[0] < 2:
+            raise ExecutionError("DataFrame must have at least two rows.")
+        if data.isna().all().all():
+            raise ExecutionError("All values in the DataFrame are missing.")
+        if all(data.nunique(dropna=False) == 1):
+            raise ExecutionError("All columns in the DataFrame have constant values.")
+        # Check for invalid types in numeric columns
+        for col in data.select_dtypes(include=[object]).columns:
+            if not pd.api.types.is_numeric_dtype(data[col]):
+                try:
+                    pd.to_numeric(data[col])
+                except Exception:
+                    raise ExecutionError(f"Invalid data type in column '{col}'.")
         self.data = data
         if data is not None:
             # Prepare features and target
@@ -294,14 +321,12 @@ class ExecutionManager:
             else:
                 self.X = data.copy()
                 self.y = None
-            
             # Create train/test split if we have target
             if self.y is not None:
                 from sklearn.model_selection import train_test_split
                 self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
                     self.X, self.y, test_size=0.2, random_state=42
                 )
-        
         # Update sandbox with data variables
         self._update_sandbox()
     

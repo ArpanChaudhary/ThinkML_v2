@@ -6,7 +6,7 @@ This module provides functionality for preprocessing data before model training.
 
 from thinkml.preprocessor.missing_values import handle_missing_values
 from thinkml.preprocessor.encoder import encode_categorical
-from thinkml.preprocessor.scaler import scale_features
+from thinkml.preprocessor.scaler import scale_features, handle_extreme_values
 from thinkml.preprocessor.multicollinearity import (
     detect_multicollinearity,
     resolve_multicollinearity,
@@ -21,5 +21,6 @@ __all__ = [
     'detect_multicollinearity',
     'resolve_multicollinearity',
     'MulticollinearityHandler',
-    'handle_imbalance'
+    'handle_imbalance',
+    'handle_extreme_values'
 ] 

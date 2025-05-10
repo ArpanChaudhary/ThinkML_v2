@@ -29,6 +29,8 @@ def plot_roc_curve(model: Any, X_test: pd.DataFrame, y_test: pd.Series) -> PlotR
     """
     if model is None:
         raise ValueError("Model must be trained before plotting")
+    if not hasattr(model, 'predict_proba'):
+        raise ValueError("Model does not support probability prediction (predict_proba)")
     
     # Check if binary or multiclass
     unique_classes = np.unique(y_test)
@@ -141,6 +143,8 @@ def plot_confusion_matrix(model: Any, X_test: pd.DataFrame, y_test: pd.Series) -
     """
     if model is None:
         raise ValueError("Model must be trained before plotting")
+    if not hasattr(model, 'predict'):
+        raise ValueError("Model does not support prediction (predict)")
     
     y_pred = model.predict(X_test)
     cm = confusion_matrix(y_test, y_pred)
