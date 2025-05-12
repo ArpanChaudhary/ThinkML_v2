@@ -305,7 +305,7 @@ def detect_outliers(data: Union[pd.DataFrame, dd.DataFrame], columns: Optional[L
         'outlier_indices': outlier_indices,
         'outlier_scores': outlier_scores,
         'summary': summary
-    }
+    } 
 
 def handle_extreme_values(data: Union[pd.DataFrame, dd.DataFrame], columns: Optional[List[str]] = None, method: str = 'clip', threshold: float = 3.0, **kwargs) -> Union[pd.DataFrame, dd.DataFrame]:
     """
