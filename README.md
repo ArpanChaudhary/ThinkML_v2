@@ -1,6 +1,130 @@
-# ThinkML
+# ThinkML: End-to-End Machine Learning Workflow Library
 
-ThinkML is a Python library that converts natural language prompts into executable machine learning code. It provides an intuitive interface for performing common ML tasks through simple text commands.
+ThinkML is a comprehensive machine learning library designed to streamline your ML workflow while maintaining flexibility and ease of use.
+
+## 🚀 Quick Installation
+
+### Basic Installation (Core Features)
+```bash
+pip install thinkml
+```
+
+### Installation with Optional Components
+
+Choose the components you need:
+
+```bash
+# For all features
+pip install "thinkml[all]"
+
+# For visualization tools
+pip install "thinkml[viz]"
+
+# For boosting algorithms
+pip install "thinkml[boost]"
+
+# For deployment tools
+pip install "thinkml[deploy]"
+
+# For deep learning support
+pip install "thinkml[deep]"
+
+# For full ML stack (excluding deep learning)
+pip install "thinkml[full]"
+```
+
+## 📦 Components
+
+### Core Features (Included in Basic Installation)
+- Data preprocessing and analysis
+- Basic model training and evaluation
+- Standard visualization tools
+- Performance metrics and validation
+
+### Optional Components
+
+#### Visualization Tools [viz]
+- Interactive plotting with Plotly
+- Dashboard creation with Dash
+
+#### Boosting Libraries [boost]
+- XGBoost
+- LightGBM
+- (Note: CatBoost available for non-Windows platforms)
+
+#### Deployment Tools [deploy]
+- FastAPI integration
+- ONNX export
+- Model serving utilities
+
+#### Deep Learning [deep]
+- PyTorch integration
+- TensorFlow support
+
+#### Full ML Stack [full]
+- All ML-related tools
+- Advanced optimization
+- Distributed computing support
+
+## 🔧 Troubleshooting
+
+### Common Installation Issues
+
+1. **Missing C++ Build Tools (Windows)**
+   ```bash
+   # Solution 1: Install pre-built wheels
+   pip install --only-binary :all: thinkml[boost]
+   
+   # Solution 2: Install Build Tools
+   # Download and install from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
+   ```
+
+2. **Memory Issues**
+   ```bash
+   # Install with minimal dependencies first
+   pip install thinkml
+   
+   # Then add components as needed
+   pip install "thinkml[boost]"
+   ```
+
+3. **Version Conflicts**
+   ```bash
+   # Create a fresh virtual environment
+   python -m venv thinkml_env
+   source thinkml_env/bin/activate  # Linux/Mac
+   thinkml_env\Scripts\activate     # Windows
+   
+   # Install ThinkML
+   pip install "thinkml[all]"
+   ```
+
+## 📚 Documentation
+
+For detailed documentation, visit: [Documentation Link]
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md).
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🌟 Features
+
+- Modular design for flexible usage
+- Comprehensive ML workflow support
+- Easy integration with popular ML frameworks
+- Extensive visualization capabilities
+- Production-ready deployment tools
+
+## 🔗 Links
+
+- [Documentation](docs/)
+- [Examples](examples/)
+- [Issue Tracker](https://github.com/ArpanChaudhary/ThinkML/issues)
+- [Source Code](https://github.com/ArpanChaudhary/ThinkML)
 
 ## Key Features
 
@@ -36,14 +160,6 @@ ThinkML is a Python library that converts natural language prompts into executab
 - **Model Deployment:** `fastapi`, `uvicorn`, `onnx`, `pmml2json`.
 - **Monitoring and Logging:** `prometheus-client`, `python-json-logger`, `mlflow`.
 - **Development and Testing:** `pytest`, `pytest-cov`, `black`, `flake8`, `mypy`, `isort`.
-
-## Installation
-
-To install ThinkML, run the following command:
-
-```bash
-pip install thinkml
-```
 
 ## Quick Start
 
